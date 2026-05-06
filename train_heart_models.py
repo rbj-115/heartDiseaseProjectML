@@ -481,3 +481,95 @@ print(best_rf_params)
 print(f"Best Eval Accuracy: {best_rf_accuracy:.4f}")
 
 print("\nDone!")
+
+# ============================================================
+# 14. Extra Figure 1
+# ============================================================
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+LR_COL = "#2E86AB"
+ACCENT = "#1A5276"
+SVM_COL = "#E84855"
+BG = "#FAFAFA"
+
+plt.rcParams.update({
+    "font.family": "DejaVu Serif",
+    "axes.spines.top": False,
+    "axes.spines.right": False,
+    "axes.facecolor": BG,
+    "figure.facecolor": "white",
+    "axes.grid": True,
+    "grid.alpha": 0.3,
+    "grid.linestyle": "--",
+})
+
+C_unique  = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+auc_lib   = [0.8694, 0.8881, 0.8924, 0.8967, 0.8996, 0.8996, 0.9005]
+auc_lbfgs = [0.8886, 0.8881, 0.8895, 0.8953, 0.8986, 0.9005, 0.9005]
+
+fig, ax = plt.subplots(figsize=(6, 3.8))
+ax.semilogx(C_unique, auc_lib,  "o-", color=LR_COL,  linewidth=2, markersize=6, label="liblinear")
+ax.semilogx(C_unique, auc_lbfgs,"s--",color=ACCENT,  linewidth=2, markersize=6, label="lbfgs")
+ax.axvline(0.1, color=SVM_COL, linewidth=1.5, linestyle=":", alpha=0.8, label="Best C = 0.1")
+ax.set_xlabel("Regularisation Strength C (log scale)", fontsize=10)
+ax.set_ylabel("Eval AUROC", fontsize=10)
+ax.set_title(" LR Hyperparameter Tuning: AUROC vs C", fontsize=11,
+             color=ACCENT, fontweight="bold", pad=10)
+ax.legend(fontsize=9, framealpha=0.5)
+ax.set_ylim(0.855, 0.91)
+fig.tight_layout()
+fig.savefig("fig5_lr_tuning.png", dpi=180, bbox_inches="tight")
+
+# ============================================================
+# 15. Extra Figure 2
+# ============================================================
+import matplotlib.pyplot as plt
+import numpy as np
+
+LR_COL  = "#2E86AB"
+SVM_COL = "#E84855"
+RF_COL  = "#3BB273"
+ACCENT  = "#1A5276"
+GREY    = "#888888"
+BG      = "#FAFAFA"
+
+plt.rcParams.update({
+    "font.family": "DejaVu Serif",
+    "figure.facecolor": "white",
+})
+
+final = {
+    "LR":  {"Accuracy": 0.8080, "Precision": 0.8378, "Recall": 0.8105, "F1": 0.8239, "AUROC": 0.8897},
+    "SVM": {"Accuracy": 0.8188, "Precision": 0.8280, "Recall": 0.8497, "F1": 0.8387, "AUROC": 0.8988},
+    "RF":  {"Accuracy": 0.8152, "Precision": 0.8312, "Recall": 0.8366, "F1": 0.8339, "AUROC": 0.8945},
+}
+
+cats = ["Accuracy", "Precision", "Recall", "F1", "AUROC"]
+N = len(cats)
+angles = [n / float(N) * 2 * np.pi for n in range(N)]
+angles += angles[:1]
+
+def model_vals(key):
+    v = [final[key][m] for m in cats]
+    return v + v[:1]
+
+fig, ax = plt.subplots(figsize=(5, 5), subplot_kw=dict(polar=True))
+ax.set_facecolor(BG)
+
+for key, col, lbl in zip(["LR", "SVM", "RF"], [LR_COL, SVM_COL, RF_COL], ["LR", "SVM", "RF"]):
+    vals = model_vals(key)
+    ax.plot(angles, vals, "o-", linewidth=2, color=col, label=lbl)
+    ax.fill(angles, vals, alpha=0.08, color=col)
+
+ax.set_xticks(angles[:-1])
+ax.set_xticklabels(cats, fontsize=10)
+ax.set_ylim(0.75, 0.92)
+ax.set_yticks([0.78, 0.82, 0.86, 0.90])
+ax.set_yticklabels(["0.78", "0.82", "0.86", "0.90"], fontsize=7, color=GREY)
+ax.set_title(" Radar Chart — Test Set Metrics", fontsize=11,
+             color=ACCENT, fontweight="bold", pad=18)
+ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.15), fontsize=9)
+fig.tight_layout()
+fig.savefig("fig7_radar.png", dpi=180, bbox_inches="tight")
